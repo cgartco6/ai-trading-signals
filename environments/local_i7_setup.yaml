@@ -1,0 +1,27 @@
+# Optimized for Dell i7, 16GB RAM, 1TB SSD
+system:
+  max_workers: 4  # i7 typically has 4 cores/8 threads
+  memory_limit: "12GB"  # Leave 4GB for system
+  gpu_enabled: false  # No dedicated GPU
+  precision: "mixed"  # Use mixed precision for efficiency
+
+trading:
+  symbols_per_batch: 8  # Reduced for CPU optimization
+  update_interval: "5m"  # 5-minute intervals
+  max_concurrent_pairs: 6
+
+models:
+  batch_size: 32  # Reduced for CPU
+  model_parallelism: true
+  cache_models: true
+  quantization: true  # Use quantized models for speed
+
+data:
+  cache_dir: "./data/cache"
+  max_cache_size: "50GB"
+  preload_data: true
+
+performance:
+  use_async: true
+  max_pending_tasks: 10
+  timeout: 30

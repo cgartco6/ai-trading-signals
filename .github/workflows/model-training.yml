@@ -1,0 +1,19 @@
+name: Model Training Pipeline
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly training
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  train-models:
+    runs-on: ubuntu-latest
+    environment: model-training
+    steps:
+      - uses: actions/checkout@v4
+      - name: Train AI Models
+        run: |
+          python -m models.neural_networks.transformer_model --train
+          python -m models.neural_networks.lstm_attention --train
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_URI }}

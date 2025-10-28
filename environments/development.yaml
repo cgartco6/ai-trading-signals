@@ -1,0 +1,35 @@
+# Development environment settings
+system:
+  max_workers: 2
+  memory_limit: "8GB"
+  gpu_enabled: false
+  precision: "float32"
+  log_level: "DEBUG"
+
+trading:
+  symbols_per_batch: 4
+  update_interval: 600
+  max_concurrent_pairs: 3
+  confidence_threshold: 0.70
+  risk_per_trade: 0.01
+  max_daily_signals: 20
+  enabled_markets:
+    - "crypto"
+
+models:
+  batch_size: 16
+  model_parallelism: false
+  cache_models: true
+  quantization: false
+  update_frequency: 3600
+
+data:
+  cache_dir: "./data/cache"
+  max_cache_size: "10GB"
+  preload_data: false
+
+telegram:
+  bot_token: "DEV_BOT_TOKEN"
+  chat_id: "DEV_CHAT_ID"
+  enable_alerts: true
+  alert_level: "debug"

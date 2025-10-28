@@ -1,0 +1,37 @@
+# Production environment settings
+system:
+  max_workers: 8
+  memory_limit: "16GB"
+  gpu_enabled: true
+  precision: "mixed"
+  log_level: "WARNING"
+
+trading:
+  symbols_per_batch: 12
+  update_interval: 60
+  max_concurrent_pairs: 10
+  confidence_threshold: 0.80
+  risk_per_trade: 0.02
+  max_daily_signals: 100
+  enabled_markets:
+    - "forex"
+    - "crypto"
+    - "indices"
+
+models:
+  batch_size: 64
+  model_parallelism: true
+  cache_models: true
+  quantization: true
+  update_frequency: 43200
+
+data:
+  cache_dir: "./data/cache"
+  max_cache_size: "100GB"
+  preload_data: true
+
+telegram:
+  bot_token: "PROD_BOT_TOKEN"
+  chat_id: "PROD_CHAT_ID"
+  enable_alerts: true
+  alert_level: "warning"

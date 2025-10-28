@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  ai-trader:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: ai-trading-signals
+    volumes:
+      - ./data:/app/data
+      - ./models/trained_models:/app/models/trained_models
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=production
+    deploy:
+      resources:
+        limits:
+          memory: 12G
+          cpus: '4.0'
+    restart: unless-stopped
+
+  monitor:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./docker/grafana:/etc/grafana
+    depends_on:
+      - ai-trader
+
+  redis:
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+volumes:
+  redis_data:

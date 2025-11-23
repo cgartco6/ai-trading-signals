@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trading Signal System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --gray: #6b7280;
+            --border: #e5e7eb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0f172a;
+            color: var(--light);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+            padding: 1rem 0;
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 1.8rem;
+            color: var(--secondary);
+        }
+        
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        @media (min-width: 768px) {
+            .dashboard {
+                grid-template-columns: 300px 1fr;
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 300px 1fr 300px;
+            }
+        }
+        
+        .panel {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #334155;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .signal-card {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        
+        .signal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .signal-card.buy {
+            border-left-color: var(--secondary);
+        }
+        
+        .signal-card.sell {
+            border-left-color: var(--danger);
+        }
+        
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .symbol {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .action {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .action.buy {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--secondary);
+        }
+        
+        .action.sell {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        .signal-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .detail-label {
+            color: var(--gray);
+        }
+        
+        .confidence-bar {
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        .confidence-high {
+            background: var(--secondary);
+        }
+        
+        .confidence-medium {
+            background: var(--warning);
+        }
+        
+        .confidence-low {
+            background: var(--danger);
+        }
+        
+        .agent-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .agent-status:last-child {
+            border-bottom: none;
+        }
+        
+        .agent-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(37, 99, 235, 0.2);
+            color: var(--primary);
+        }
+        
+        .agent-info {
+            flex: 1;
+        }
+        
+        .agent-name {
+            font-weight: 600;
+        }
+        
+        .agent-desc {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        .agent-performance {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .performance-high {
+            color: var(--secondary);
+        }
+        
+        .performance-medium {
+            color: var(--warning);
+        }
+        
+        .performance-low {
+            color: var(--danger);
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: #334155;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #475569;
+        }
+        
+        .btn-success {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #0da271;
+        }
+        
+        .market-regime {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .regime-trending {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--secondary);
+        }
+        
+        .regime-ranging {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .regime-volatile {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification i {
+            font-size: 1.2rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid #334155;
+            margin-top: 30px;
+        }
+        
+        .mobile-menu {
+            display: none;
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .mobile-menu select, .mobile-menu button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: white;
+        }
+        
+        @media (max-width: 767px) {
+            .mobile-menu {
+                display: block;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <h1>AI Trading Signals</h1>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>System Active - Generating Signals</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="mobile-menu">
+            <select id="marketSelect">
+                <option value="all">All Markets</option>
+                <option value="crypto">Crypto Only</option>
+                <option value="forex">Forex Only</option>
+            </select>
+            <select id="timeframeSelect">
+                <option value="all">All Timeframes</option>
+                <option value="1h">1 Hour</option>
+                <option value="4h">4 Hours</option>
+                <option value="1d">1 Day</option>
+            </select>
+            <button class="btn btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Refresh Signals
+            </button>
+        </div>
+
+        <div class="dashboard">
+            <!-- Left Panel - AI Agents Status -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-microchip"></i> AI Agents</h2>
+                    <span class="market-regime regime-trending">TRENDING</span>
+                </div>
+                
+                <div id="agentsList">
+                    <!-- AI agents will be populated here by JavaScript -->
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Signals Today</div>
+                        <div class="stat-value" id="signalsToday">24</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Accuracy</div>
+                        <div class="stat-value" id="accuracyRate">78%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Panel - Trading Signals -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-chart-line"></i> Live Signals</h2>
+                    <div class="controls">
+                        <button class="btn btn-secondary" id="pauseBtn">
+                            <i class="fas fa-pause"></i> Pause
+                        </button>
+                        <button class="btn btn-primary" id="analyzeBtn">
+                            <i class="fas fa-bolt"></i> Analyze Now
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="signalsContainer">
+                    <!-- Trading signals will be populated here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Right Panel - Performance & Charts -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-chart-bar"></i> Performance</h2>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Active Signals</div>
+                        <div class="stat-value" id="activeSignals">8</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Confidence</div>
+                        <div class="stat-value" id="avgConfidence">82%</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-secondary" id="exportBtn">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button class="btn btn-success" id="telegramBtn">
+                        <i class="fab fa-telegram"></i> Send to Telegram
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <i class="fas fa-bell"></i>
+        <span id="notificationText">New trading signal generated!</span>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>AI Trading Signal System &copy; 2023 | Optimized for Dell i7, 16GB RAM</p>
+            <p>This is a simulation for demonstration purposes</p>
+        </div>
+    </footer>
+
+    <script>
+        // AI Agents Data
+        const aiAgents = [
+            {
+                id: 1,
+                name: "Deep Predictive Agent",
+                description: "Neural network price prediction",
+                performance: 82,
+                status: "active",
+                icon: "fas fa-brain"
+            },
+            {
+                id: 2,
+                name: "Sentiment Analyzer",
+                description: "Market sentiment analysis",
+                performance: 76,
+                status: "active",
+                icon: "fas fa-comment-alt"
+            },
+            {
+                id: 3,
+                name: "Pattern Recognizer",
+                description: "Technical pattern detection",
+                performance: 79,
+                status: "active",
+                icon: "fas fa-shapes"
+            },
+            {
+                id: 4,
+                name: "Risk Orchestrator",
+                description: "Risk management & position sizing",
+                performance: 85,
+                status: "active",
+                icon: "fas fa-shield-alt"
+            },
+            {
+                id: 5,
+                name: "Quantum Analyzer",
+                description: "Quantum-inspired algorithms",
+                performance: 71,
+                status: "active",
+                icon: "fas fa-atom"
+            }
+        ];
+
+        // Trading Signals Data
+        let tradingSignals = [
+            {
+                id: 1,
+                symbol: "BTC/USDT",
+                action: "buy",
+                confidence: 89,
+                timeframe: "4H",
+                price: 29450,
+                targets: [30200, 30800, 31500],
+                stopLoss: 28500,
+                timestamp: new Date(),
+                agentBreakdown: {
+                    "Deep Predictive": "BUY (92%)",
+                    "Sentiment Analyzer": "BUY (85%)",
+                    "Pattern Recognizer": "BUY (90%)"
+                }
+            },
+            {
+                id: 2,
+                symbol: "EUR/USD",
+                action: "sell",
+                confidence: 76,
+                timeframe: "1H",
+                price: 1.0950,
+                targets: [1.0880, 1.0820, 1.0750],
+                stopLoss: 1.1020,
+                timestamp: new Date(),
+                agentBreakdown: {
+                    "Deep Predictive": "SELL (80%)",
+                    "Sentiment Analyzer": "SELL (72%)",
+                    "Pattern Recognizer": "SELL (76%)"
+                }
+            },
+            {
+                id: 3,
+                symbol: "ETH/USDT",
+                action: "buy",
+                confidence: 82,
+                timeframe: "1D",
+                price: 1850,
+                targets: [1920, 1980, 2050],
+                stopLoss: 1780,
+                timestamp: new Date(),
+                agentBreakdown: {
+                    "Deep Predictive": "BUY (85%)",
+                    "Sentiment Analyzer": "BUY (78%)",
+                    "Pattern Recognizer": "BUY (83%)"
+                }
+            },
+            {
+                id: 4,
+                symbol: "GBP/JPY",
+                action: "sell",
+                confidence: 71,
+                timeframe: "4H",
+                price: 183.50,
+                targets: [181.00, 178.50, 176.00],
+                stopLoss: 186.00,
+                timestamp: new Date(),
+                agentBreakdown: {
+                    "Deep Predictive": "SELL (75%)",
+                    "Sentiment Analyzer": "SELL (68%)",
+                    "Pattern Recognizer": "SELL (70%)"
+                }
+            }
+        ];
+
+        // Market Regimes
+        const marketRegimes = [
+            { name: "TRENDING", class: "regime-trending" },
+            { name: "RANGING", class: "regime-ranging" },
+            { name: "VOLATILE", class: "regime-volatile" }
+        ];
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            renderAIAgents();
+            renderTradingSignals();
+            initializePerformanceChart();
+            setupEventListeners();
+            startSignalGeneration();
+        });
+
+        // Render AI Agents
+        function renderAIAgents() {
+            const agentsList = document.getElementById('agentsList');
+            agentsList.innerHTML = '';
+            
+            aiAgents.forEach(agent => {
+                const performanceClass = getPerformanceClass(agent.performance);
+                
+                const agentElement = document.createElement('div');
+                agentElement.className = 'agent-status';
+                agentElement.innerHTML = `
+                    <div class="agent-icon">
+                        <i class="${agent.icon}"></i>
+                    </div>
+                    <div class="agent-info">
+                        <div class="agent-name">${agent.name}</div>
+                        <div class="agent-desc">${agent.description}</div>
+                    </div>
+                    <div class="agent-performance ${performanceClass}">${agent.performance}%</div>
+                `;
+                
+                agentsList.appendChild(agentElement);
+            });
+        }
+
+        // Render Trading Signals
+        function renderTradingSignals() {
+            const signalsContainer = document.getElementById('signalsContainer');
+            signalsContainer.innerHTML = '';
+            
+            if (tradingSignals.length === 0) {
+                signalsContainer.innerHTML = '<div class="signal-card"><p>No signals available. Analyzing markets...</p></div>';
+                return;
+            }
+            
+            tradingSignals.forEach(signal => {
+                const confidenceClass = getConfidenceClass(signal.confidence);
+                
+                const signalElement = document.createElement('div');
+                signalElement.className = `signal-card ${signal.action}`;
+                signalElement.innerHTML = `
+                    <div class="signal-header">
+                        <div class="symbol">${signal.symbol}</div>
+                        <div class="action ${signal.action}">${signal.action.toUpperCase()}</div>
+                    </div>
+                    <div class="signal-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Confidence:</span>
+                            <span>${signal.confidence}%</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Timeframe:</span>
+                            <span>${signal.timeframe}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Price:</span>
+                            <span>${formatPrice(signal.price)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Stop Loss:</span>
+                            <span>${formatPrice(signal.stopLoss)}</span>
+                        </div>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill ${confidenceClass}" style="width: ${signal.confidence}%"></div>
+                    </div>
+                `;
+                
+                signalsContainer.appendChild(signalElement);
+            });
+        }
+
+        // Initialize Performance Chart
+        function initializePerformanceChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            // Sample performance data
+            const performanceData = {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [
+                    {
+                        label: 'Signal Accuracy',
+                        data: [72, 75, 78, 82, 80, 85, 78],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Avg Confidence',
+                        data: [68, 72, 75, 78, 82, 80, 82],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            };
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: performanceData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#f9fafb'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 60,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f9fafb'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f9fafb'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Refresh button
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                generateNewSignals();
+                showNotification('Markets analyzed - new signals generated!');
+            });
+            
+            // Pause/Resume button
+            document.getElementById('pauseBtn').addEventListener('click', function() {
+                const isPaused = this.innerHTML.includes('Resume');
+                
+                if (isPaused) {
+                    this.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                    startSignalGeneration();
+                    showNotification('Signal generation resumed');
+                } else {
+                    this.innerHTML = '<i class="fas fa-play"></i> Resume';
+                    stopSignalGeneration();
+                    showNotification('Signal generation paused');
+                }
+            });
+            
+            // Analyze Now button
+            document.getElementById('analyzeBtn').addEventListener('click', function() {
+                generateNewSignals();
+                showNotification('Deep analysis completed - signals updated!');
+            });
+            
+            // Export button
+            document.getElementById('exportBtn').addEventListener('click', function() {
+                exportSignals();
+                showNotification('Signals exported successfully!');
+            });
+            
+            // Telegram button
+            document.getElementById('telegramBtn').addEventListener('click', function() {
+                sendToTelegram();
+                showNotification('Signals sent to Telegram!');
+            });
+            
+            // Market filter
+            document.getElementById('marketSelect').addEventListener('change', function() {
+                filterSignals();
+            });
+            
+            // Timeframe filter
+            document.getElementById('timeframeSelect').addEventListener('change', function() {
+                filterSignals();
+            });
+        }
+
+        // Signal Generation Simulation
+        let signalInterval;
+        
+        function startSignalGeneration() {
+            // Generate a new signal every 30 seconds
+            signalInterval = setInterval(generateNewSignal, 30000);
+        }
+        
+        function stopSignalGeneration() {
+            clearInterval(signalInterval);
+        }
+        
+        function generateNewSignal() {
+            // Simulate AI generating a new signal
+            const symbols = ['BTC/USDT', 'ETH/USDT', 'ADA/USDT', 'XRP/USDT', 'EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD'];
+            const actions = ['buy', 'sell'];
+            const timeframes = ['1H', '4H', '1D'];
+            
+            const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+            const randomAction = actions[Math.floor(Math.random() * actions.length)];
+            const randomTimeframe = timeframes[Math.floor(Math.random() * timeframes.length)];
+            const randomConfidence = Math.floor(Math.random() * 30) + 65; // 65-95%
+            
+            // Check if symbol already has a signal
+            const existingSignalIndex = tradingSignals.findIndex(signal => signal.symbol === randomSymbol);
+            
+            if (existingSignalIndex !== -1) {
+                // Update existing signal
+                tradingSignals[existingSignalIndex].action = randomAction;
+                tradingSignals[existingSignalIndex].confidence = randomConfidence;
+                tradingSignals[existingSignalIndex].timestamp = new Date();
+            } else {
+                // Create new signal
+                const newSignal = {
+                    id: tradingSignals.length + 1,
+                    symbol: randomSymbol,
+                    action: randomAction,
+                    confidence: randomConfidence,
+                    timeframe: randomTimeframe,
+                    price: getRandomPrice(randomSymbol),
+                    targets: generateTargets(randomSymbol, randomAction),
+                    stopLoss: getStopLoss(randomSymbol, randomAction),
+                    timestamp: new Date(),
+                    agentBreakdown: {
+                        "Deep Predictive": `${randomAction.toUpperCase()} (${randomConfidence + Math.floor(Math.random() * 10) - 5}%)`,
+                        "Sentiment Analyzer": `${randomAction.toUpperCase()} (${randomConfidence + Math.floor(Math.random() * 10) - 5}%)`,
+                        "Pattern Recognizer": `${randomAction.toUpperCase()} (${randomConfidence + Math.floor(Math.random() * 10) - 5}%)`
+                    }
+                };
+                
+                tradingSignals.unshift(newSignal);
+                
+                // Keep only the 8 most recent signals
+                if (tradingSignals.length > 8) {
+                    tradingSignals.pop();
+                }
+            }
+            
+            renderTradingSignals();
+            updateStats();
+            
+            // Show notification for high-confidence signals
+            if (randomConfidence > 80) {
+                showNotification(`New ${randomAction.toUpperCase()} signal for ${randomSymbol} (${randomConfidence}% confidence)`);
+            }
+        }
+        
+        function generateNewSignals() {
+            // Generate 2-4 new signals at once
+            const numSignals = Math.floor(Math.random() * 3) + 2;
+            
+            for (let i = 0; i < numSignals; i++) {
+                generateNewSignal();
+            }
+            
+            updateStats();
+        }
+
+        // Helper Functions
+        function getPerformanceClass(performance) {
+            if (performance >= 80) return 'performance-high';
+            if (performance >= 70) return 'performance-medium';
+            return 'performance-low';
+        }
+        
+        function getConfidenceClass(confidence) {
+            if (confidence >= 80) return 'confidence-high';
+            if (confidence >= 70) return 'confidence-medium';
+            return 'confidence-low';
+        }
+        
+        function formatPrice(price) {
+            if (price < 10) return price.toFixed(4);
+            if (price < 1000) return price.toFixed(2);
+            return Math.round(price);
+        }
+        
+        function getRandomPrice(symbol) {
+            const priceRanges = {
+                'BTC/USDT': [25000, 35000],
+                'ETH/USDT': [1500, 2500],
+                'ADA/USDT': [0.2, 0.5],
+                'XRP/USDT': [0.4, 0.8],
+                'EUR/USD': [1.05, 1.15],
+                'GBP/USD': [1.20, 1.35],
+                'USD/JPY': [130, 150],
+                'AUD/USD': [0.65, 0.75]
+            };
+            
+            const range = priceRanges[symbol] || [1, 100];
+            return parseFloat((Math.random() * (range[1] - range[0]) + range[0]).toFixed(4));
+        }
+        
+        function generateTargets(symbol, action) {
+            const price = getRandomPrice(symbol);
+            const targets = [];
+            
+            for (let i = 1; i <= 3; i++) {
+                const multiplier = action === 'buy' ? 1 + (i * 0.03) : 1 - (i * 0.03);
+                targets.push(parseFloat((price * multiplier).toFixed(4)));
+            }
+            
+            return targets;
+        }
+        
+        function getStopLoss(symbol, action) {
+            const price = getRandomPrice(symbol);
+            const multiplier = action === 'buy' ? 0.97 : 1.03;
+            return parseFloat((price * multiplier).toFixed(4));
+        }
+        
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+        
+        function updateStats() {
+            // Update active signals count
+            document.getElementById('activeSignals').textContent = tradingSignals.length;
+            
+            // Update average confidence
+            const avgConfidence = Math.round(tradingSignals.reduce((sum, signal) => sum + signal.confidence, 0) / tradingSignals.length);
+            document.getElementById('avgConfidence').textContent = `${avgConfidence}%`;
+            
+            // Update signals today (random between 20-30)
+            document.getElementById('signalsToday').textContent = Math.floor(Math.random() * 11) + 20;
+            
+            // Update accuracy (random between 75-85%)
+            document.getElementById('accuracyRate').textContent = `${Math.floor(Math.random() * 11) + 75}%`;
+            
+            // Randomly change market regime
+            const randomRegime = marketRegimes[Math.floor(Math.random() * marketRegimes.length)];
+            const regimeElement = document.querySelector('.market-regime');
+            regimeElement.className = `market-regime ${randomRegime.class}`;
+            regimeElement.textContent = randomRegime.name;
+        }
+        
+        function filterSignals() {
+            const marketFilter = document.getElementById('marketSelect').value;
+            const timeframeFilter = document.getElementById('timeframeSelect').value;
+            
+            let filteredSignals = [...tradingSignals];
+            
+            // Apply market filter
+            if (marketFilter === 'crypto') {
+                filteredSignals = filteredSignals.filter(signal => 
+                    signal.symbol.includes('/USDT')
+                );
+            } else if (marketFilter === 'forex') {
+                filteredSignals = filteredSignals.filter(signal => 
+                    signal.symbol.includes('/') && !signal.symbol.includes('USDT')
+                );
+            }
+            
+            // Apply timeframe filter
+            if (timeframeFilter !== 'all') {
+                filteredSignals = filteredSignals.filter(signal => 
+                    signal.timeframe === timeframeFilter
+                );
+            }
+            
+            // Temporarily display filtered signals
+            const originalSignals = [...tradingSignals];
+            tradingSignals = filteredSignals;
+            renderTradingSignals();
+            tradingSignals = originalSignals;
+        }
+        
+        function exportSignals() {
+            // In a real app, this would export to CSV or PDF
+            console.log('Exporting signals:', tradingSignals);
+        }
+        
+        function sendToTelegram() {
+            // In a real app, this would send signals to Telegram
+            console.log('Sending to Telegram:', tradingSignals);
+        }
+
+        // Start the signal generation on page load
+        startSignalGeneration();
+    </script>
+</body>
+</html>
